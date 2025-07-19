@@ -4,8 +4,10 @@ import { Badge } from './ui/badge'
 import { Clock, Mic, MicOff, Volume2, VolumeX } from 'lucide-react'
 import { Button } from './ui/button'
 import Image from 'next/image'
+import { useParams } from 'next/navigation'
 
 const Header = () => {
+  const {roomid}=useParams()
     const [isMuted, setIsMuted] = useState(false)
     const [isSpeakerMuted, setIsSpeakerMuted] = useState(false)
   return (
@@ -36,7 +38,7 @@ const Header = () => {
               
               <Image src='/logo.jpg' alt='logo' width={200} height={40} className='mt-3'/>
         <Badge className="hidden sm:inline-flex bg-gray-800 text-gray-300 border-gray-700 ml-5">
-          Room: #ABC123
+          Room: {roomid}
         </Badge>
       </div>
 

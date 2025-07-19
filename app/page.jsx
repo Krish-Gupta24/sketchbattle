@@ -19,10 +19,7 @@ import {
   Mic,
   Play,
 } from "lucide-react";
-
-import io from "socket.io-client";
-import { redirect, useRouter } from "next/navigation";
-const socket = io("http://localhost:3001");
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [username, setUsername] = useState("");
@@ -43,6 +40,7 @@ export default function Home() {
   const handleCreateRoom = () => {
     if (!username) return;
     const room = generateRoomId();
+    localStorage.setItem("avatarUrl",avatarUrl)
     localStorage.setItem("username", username);
     router.push(`/room/${room}`); 
   };
@@ -294,7 +292,7 @@ export default function Home() {
 
         {/* Footer */}
         <div className="p-4 text-center text-gray-500 text-sm">
-          <p>© 2024 Scribbl Clone. Made with ❤️ for fun and creativity.</p>
+          <p>© 2025 ScribleBattle. Made with ❤️ for fun and creativity.</p>
         </div>
       </div>
     </div>
