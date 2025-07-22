@@ -1,6 +1,6 @@
 "use client"
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -20,18 +20,19 @@ import {
   Play,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { RoomExist } from "@/actions/logic";
 
 export default function Home() {
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [seed, setSeed] = useState(generateRandomSeed());
   const [activeTab, setActiveTab] = useState()
-  
   const avatarUrl = `https://api.dicebear.com/8.x/adventurer-neutral/svg?seed=${seed}&radius=50`;
+  
 
   function generateRandomSeed() {
     return Math.random().toString(36).substring(2, 10); 
-  }
+  }  
 
   const router = useRouter()
   const generateRoomId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -45,10 +46,17 @@ export default function Home() {
     router.push(`/room/${room}`); 
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async() => {
     if (!username) return
-    localStorage.setItem("username", username);
-    router.push(`/room/${room}`)
+    const val = await RoomExist(room)
+    console.log(val)
+    if (val===true) {
+      localStorage.setItem("avatarUrl", avatarUrl);
+      localStorage.setItem("username", username);
+      router.push(`/room/${room}`);
+    } else {
+      router.push(`/`)
+    }
   }
   return (
     <div className="min-h-screen bg-gray-950 text-white relative overflow-hidden">
@@ -87,7 +95,6 @@ export default function Home() {
                   <Palette className="w-5 h-5" />
                   Choose Your Avatar
                 </h2>
-
                 <img
                   src={avatarUrl}
                   alt="Random Avatar"
@@ -151,9 +158,7 @@ export default function Home() {
                       </label>
                       <Input
                         value={room}
-                        onChange={(e) =>
-                          setRoom(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => setRoom(e.target.value.toUpperCase())}
                         placeholder="Enter room code..."
                         className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 text-center text-lg font-mono"
                         maxLength={6}

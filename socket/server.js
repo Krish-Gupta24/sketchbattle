@@ -34,7 +34,11 @@ io.on("connection", (socket) => {
       // Add or update the user in DB
       await db.user.upsert({
         where: { id: socket.id },
-        update: {},
+        update: {
+          username,
+          avatar: avatarUrl,
+          roomId: room,
+        },
         create: {
           id: socket.id,
           username,
@@ -43,10 +47,12 @@ io.on("connection", (socket) => {
         },
       });
 
+
       // Notify room
       io.to(room).emit("message", {
         username: "Server",
         message: `${username} joined the room.`,
+
       });
     } catch (error) {
       console.error("❌ Error in joinRoom:", error);
@@ -76,8 +82,12 @@ io.on("connection", (socket) => {
         message: `${username} left the room.`,
       });
 
+
       console.log(`❌ ${username} disconnected from room "${room}"`);
       delete users[socket.id];
+      await db.user.delete({
+        where:{id:socket.id}
+      })
 
       // Check if any users are left in the room
       const usersInRoom = Object.values(users).filter((u) => u.room === room);

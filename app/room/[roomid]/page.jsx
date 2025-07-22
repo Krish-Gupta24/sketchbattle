@@ -1,44 +1,72 @@
-"use client"
-import socket from '@/app/socket-client';
-import Header from '@/components/header';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Send, Users } from 'lucide-react';
-import { useParams } from 'next/navigation'
-import React, { useState,useEffect } from 'react'
+"use client";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { userData } from "@/actions/logic";
+import socket from "@/app/socket-client";
+import Header from "@/components/header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Mic,
+  MicOff,
+  Send,
+  Palette,
+  Eraser,
+  RotateCcw,
+  Users,
+  Clock,
+  Crown,
+  Volume2,
+  VolumeX,
+  X,
+  MessageCircle,
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const GamePage = () => {
-
+  const { roomid } = useParams();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const {roomid} = useParams()
+  const [roomDetails, setRoomDetails] = useState(null);
+  const [showPlayers, setShowPlayers] = useState(false);
 
-  function handleCreateRoom() {
+  const handleCreateRoom = () => {
     const username = localStorage.getItem("username");
-    const avatarUrl = localStorage.getItem("avatarUrl")
+    const avatarUrl = localStorage.getItem("avatarUrl");
     if (!username || !roomid) return;
     socket.emit("joinRoom", { username, room: roomid, avatarUrl });
-  }
+    localStorage.clear()
+  };
 
   useEffect(() => {
-    handleCreateRoom()
-  }, [roomid])
-  
-  
-  useEffect(() => {
-      socket.on("message", (msg) => {
-        setMessages((prev) => [...prev, msg]);
-      });
-      return () => {
-        socket.off("message");
-      };
-  }, []);
-  
+    handleCreateRoom();
+
+    socket.on("message", async (msg) => {
+      setMessages((prev) => [...prev, msg]);
+
+      const isServerJoinOrLeave =
+        msg.username === "Server" &&
+        (msg.message.endsWith("joined the room.") ||
+          msg.message.endsWith("left the room."));
+
+      if (isServerJoinOrLeave) {
+        const room = await userData(roomid);
+        console.log("Room Detail:", room);
+        setRoomDetails(room);
+      }
+    });
+
+    return () => {
+      socket.off("message");
+    };
+  }, [roomid]);
+
+
   const sendMessage = () => {
-    if (message.trim()) {
-      socket.emit("chatMessage", message);
-      setMessage("");
-    }
+    if (!message.trim()) return;
+    socket.emit("chatMessage", message);
+    setMessage("");
   };
 
   return (
@@ -50,11 +78,56 @@ const GamePage = () => {
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-4 h-4 text-purple-400" />
             <h2 className="font-semibold text-purple-400">
-              Players {/*TODO*/ }
+              Players {roomDetails?.users?.length ?? 0}
             </h2>
-            <div className="space-y-2">
-              
-            </div>
+          </div>
+          <div className="space-y-2">
+            {roomDetails?.users?.map((user, index) => (
+              <Card
+                key={user.id || index}
+                className="bg-gray-800 border-gray-700 p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {/* Avatar Circle */}
+                    <img
+                      src={user.avatar}
+                      alt={user.username}
+                      loading="lazy"
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+
+                    {/* Username and Status */}
+                    <div className="flex items-center gap-1">
+                      {user.host === true && (
+                        <Crown className="w-3 h-3 text-yellow-400" />
+                      )}
+                      <span className={`text-sm font-medium text-white`}>
+                        {user.username}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* You can later show score or role here */}
+                  <Badge className="bg-gray-700 text-purple-300 border-gray-600 text-xs">
+                    {user.score ?? 0}
+                  </Badge>
+                </div>
+
+                {/* If user is drawing */}
+              </Card>
+            ))}
+          </div>
+        </div>
+
+
+        {/* Main Canvas Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="bg-gray-900 p-2 sm:p-3 text-center border-b border-gray-800">
+            <p className="text-xs text-gray-400 mb-1">Your word:</p>
+            <p className="text-xl sm:text-2xl font-bold text-green-400 tracking-wider">
+              BUTTERFLY
+            </p>
           </div>
         </div>
 
@@ -103,6 +176,6 @@ const GamePage = () => {
       </div>
     </div>
   );
-}
+};
 
-export default GamePage
+export default GamePage;
