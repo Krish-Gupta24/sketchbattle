@@ -17,7 +17,7 @@ const users = {};//use obj for fast operations
 io.on("connection", (socket) => {
   console.log(`🟢 Socket connected: ${socket.id}`);
 
-  socket.on("joinRoom", async ({ username, room, avatarUrl }) => {
+  socket.on("joinRoom", async ({ username, room, avatarUrl,host,time,rounds }) => {
     try {
       users[socket.id] = { username, room, avatarUrl };
       socket.join(room);
@@ -28,7 +28,11 @@ io.on("connection", (socket) => {
       await db.room.upsert({
         where: { id: room },
         update: {},
-        create: { id: room },
+        create: {
+          id: room,
+          time,
+          rounds
+         },
       });
 
       // Add or update the user in DB
@@ -44,6 +48,7 @@ io.on("connection", (socket) => {
           username,
           avatar: avatarUrl,
           roomId: room,
+          host,
         },
       });
 

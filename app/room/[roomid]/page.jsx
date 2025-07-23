@@ -34,9 +34,13 @@ const GamePage = () => {
   const handleCreateRoom = () => {
     const username = localStorage.getItem("username");
     const avatarUrl = localStorage.getItem("avatarUrl");
+    const host = localStorage.getItem("host") === "true" ;
+    const time = parseInt(localStorage.getItem("time"), 10);
+    const rounds = parseInt(localStorage.getItem("rounds"), 10);
+    
     if (!username || !roomid) return;
-    socket.emit("joinRoom", { username, room: roomid, avatarUrl });
-    localStorage.clear()
+    socket.emit("joinRoom", { username, room: roomid, avatarUrl, host, time,rounds});
+    //localStorage.clear()
   };
 
   useEffect(() => {

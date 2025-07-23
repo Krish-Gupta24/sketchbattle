@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Users,
   Plus,
   LogIn,
@@ -23,17 +30,21 @@ import { useRouter } from "next/navigation";
 import { RoomExist } from "@/actions/logic";
 
 export default function Home() {
+
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [seed, setSeed] = useState(generateRandomSeed());
   const [activeTab, setActiveTab] = useState()
+  const [time, setTime] = useState("80")
+  const [rounds, setRounds] = useState("3")
+  
   const avatarUrl = `https://api.dicebear.com/8.x/adventurer-neutral/svg?seed=${seed}&radius=50`;
   
-
   function generateRandomSeed() {
     return Math.random().toString(36).substring(2, 10); 
   }  
-
+  
+  const host=false
   const router = useRouter()
   const generateRoomId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -43,6 +54,10 @@ export default function Home() {
     const room = generateRoomId();
     localStorage.setItem("avatarUrl",avatarUrl)
     localStorage.setItem("username", username);
+    localStorage.setItem("time",time)
+    localStorage.setItem("rounds",rounds)
+    const isHost= !host
+    localStorage.setItem("host", isHost)
     router.push(`/room/${room}`); 
   };
 
@@ -53,11 +68,13 @@ export default function Home() {
     if (val===true) {
       localStorage.setItem("avatarUrl", avatarUrl);
       localStorage.setItem("username", username);
+      localStorage.setItem("host", host);
       router.push(`/room/${room}`);
     } else {
       router.push(`/`)
     }
-  }
+  } 
+
   return (
     <div className="min-h-screen bg-gray-950 text-white relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -181,22 +198,40 @@ export default function Home() {
                       </h3>
                       <div className="space-y-3 text-sm text-gray-300">
                         <div className="flex items-center justify-between">
-                          <span>Max Players:</span>
-                          <Badge className="bg-purple-500/20 text-purple-300">
-                            8
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span>Draw Time:</span>
-                          <Badge className="bg-purple-500/20 text-purple-300">
-                            80s
-                          </Badge>
+                          <span>Round Time:</span>
+                          <Select
+                            value={time}
+                            onValueChange={(val) => setTime(val)}
+                          >
+                            <SelectTrigger className="w-[90px]">
+                              <SelectValue placeholder="80s" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="80">80s</SelectItem>
+                              <SelectItem value="90">90s</SelectItem>
+                              <SelectItem value="100">100s</SelectItem>
+                              <SelectItem value="110">110s</SelectItem>
+                              <SelectItem value="120">120s</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Rounds:</span>
-                          <Badge className="bg-purple-500/20 text-purple-300">
-                            3
-                          </Badge>
+                          <Select
+                            value={rounds}
+                            onValueChange={(val) => setRounds(val)}
+                          >
+                            <SelectTrigger className="w-[90px]">
+                              <SelectValue placeholder="3" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="2">2</SelectItem>
+                              <SelectItem value="3">3</SelectItem>
+                              <SelectItem value="4">4</SelectItem>
+                              <SelectItem value="5">5</SelectItem>
+                              <SelectItem value="6">6</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
