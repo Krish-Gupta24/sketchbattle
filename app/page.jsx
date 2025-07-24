@@ -30,50 +30,49 @@ import { useRouter } from "next/navigation";
 import { RoomExist } from "@/actions/logic";
 
 export default function Home() {
-
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [seed, setSeed] = useState(generateRandomSeed());
-  const [activeTab, setActiveTab] = useState()
-  const [time, setTime] = useState("80")
-  const [rounds, setRounds] = useState("3")
-  
-  const avatarUrl = `https://api.dicebear.com/8.x/adventurer-neutral/svg?seed=${seed}&radius=50`;
-  
-  function generateRandomSeed() {
-    return Math.random().toString(36).substring(2, 10); 
-  }  
-  
-  const host=false
-  const router = useRouter()
-  const generateRoomId = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+  const [activeTab, setActiveTab] = useState();
+  const [time, setTime] = useState("80");
+  const [rounds, setRounds] = useState("3");
 
+  const avatarUrl = `https://api.dicebear.com/8.x/adventurer-neutral/svg?seed=${seed}&radius=50`;
+
+  function generateRandomSeed() {
+    return Math.random().toString(36).substring(2, 10);
+  }
+
+  const host = false;
+  const router = useRouter();
+  const generateRoomId = () =>
+    Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const handleCreateRoom = () => {
     if (!username) return;
     const room = generateRoomId();
-    localStorage.setItem("avatarUrl",avatarUrl)
+    localStorage.setItem("avatarUrl", avatarUrl);
     localStorage.setItem("username", username);
-    localStorage.setItem("time",time)
-    localStorage.setItem("rounds",rounds)
-    const isHost= !host
-    localStorage.setItem("host", isHost)
-    router.push(`/room/${room}`); 
+    localStorage.setItem("time", time);
+    localStorage.setItem("rounds", rounds);
+    const isHost = !host;
+    localStorage.setItem("host", isHost);
+    router.push(`/room/${room}`);
   };
 
-  const handleJoinRoom = async() => {
-    if (!username) return
-    const val = await RoomExist(room)
-    console.log(val)
-    if (val===true) {
+  const handleJoinRoom = async () => {
+    if (!username) return;
+    const val = await RoomExist(room);
+    console.log(val);
+    if (val === true) {
       localStorage.setItem("avatarUrl", avatarUrl);
       localStorage.setItem("username", username);
       localStorage.setItem("host", host);
       router.push(`/room/${room}`);
     } else {
-      router.push(`/`)
+      router.push(`/`);
     }
-  } 
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white relative overflow-hidden">

@@ -15,11 +15,10 @@ datasource db {
 }
 
 model Room {
-  id        String @id
-  users     User[]
-  time      Int?   @default(100)
-  rounds    Int?   @default(3)
-  maxPlayer Int?   @default(8)
+  id     String @id
+  users  User[]
+  time   Int?   @default(100)
+  rounds Int?   @default(3)
 }
 
 model User {
@@ -29,4 +28,5 @@ model User {
   host     Boolean @default(false)
   roomId   String?
   room     Room?   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  points   Int     @default(0)
 }

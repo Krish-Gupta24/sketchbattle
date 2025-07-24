@@ -23,13 +23,19 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { words } from "@/data/data";
 
 const GamePage = () => {
   const { roomid } = useParams();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [roomDetails, setRoomDetails] = useState(null);
-  const [showPlayers, setShowPlayers] = useState(false);
+  const [time,setTime] = useState(100)
+  const [rounds, setRounds] = useState(3)
+  const [word, setWord] = useState("")
+  console.log(word)
+  
+  //const randomWord = words[Math.floor(Math.random() * words.length)];
 
   const handleCreateRoom = () => {
     const username = localStorage.getItem("username");
@@ -37,9 +43,11 @@ const GamePage = () => {
     const host = localStorage.getItem("host") === "true" ;
     const time = parseInt(localStorage.getItem("time"), 10);
     const rounds = parseInt(localStorage.getItem("rounds"), 10);
-    
+    setTime(time)
+    setRounds(rounds)
     if (!username || !roomid) return;
     socket.emit("joinRoom", { username, room: roomid, avatarUrl, host, time,rounds});
+    //setWord(randomWord)
     //localStorage.clear()
   };
 
@@ -73,9 +81,10 @@ const GamePage = () => {
     setMessage("");
   };
 
+  
   return (
     <div className="h-screen text-white overflow-hidden relative">
-      <Header />
+      <Header time={time} rounds={rounds} word={word} setWord={setWord } roomDetails={roomDetails} />
       <div className="h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] flex relative">
         {/* Left Sidebar - Players (Desktop) */}
         <div className="hidden lg:block w-60 bg-gray-900 border-r border-gray-800 p-3 overflow-y-auto">
@@ -114,7 +123,7 @@ const GamePage = () => {
 
                   {/* You can later show score or role here */}
                   <Badge className="bg-gray-700 text-purple-300 border-gray-600 text-xs">
-                    {user.score ?? 0}
+                    {user.points ?? 0}
                   </Badge>
                 </div>
 
@@ -130,7 +139,7 @@ const GamePage = () => {
           <div className="bg-gray-900 p-2 sm:p-3 text-center border-b border-gray-800">
             <p className="text-xs text-gray-400 mb-1">Your word:</p>
             <p className="text-xl sm:text-2xl font-bold text-green-400 tracking-wider">
-              BUTTERFLY
+              {word}
             </p>
           </div>
         </div>

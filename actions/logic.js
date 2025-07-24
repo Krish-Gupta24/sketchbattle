@@ -36,6 +36,7 @@ export async function userData(roomid) {
     return room 
 
   } catch (error) {
+    console.log("userData Error:",error)
     throw new Error("INVALID")
   }
 }

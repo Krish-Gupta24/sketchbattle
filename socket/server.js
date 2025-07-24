@@ -12,57 +12,71 @@ const io = new Server(server, {
   },
 });
 
-const users = {};//use obj for fast operations
+const users = {}; // use obj for fast operations
 
 io.on("connection", (socket) => {
   console.log(`🟢 Socket connected: ${socket.id}`);
 
-  socket.on("joinRoom", async ({ username, room, avatarUrl,host,time,rounds }) => {
-    try {
-      users[socket.id] = { username, room, avatarUrl };
-      socket.join(room);
+  socket.on(
+    "joinRoom",
+    async ({ username, room, avatarUrl, host, time, rounds }) => {
+      try {
+        users[socket.id] = { username, room, avatarUrl };
+        socket.join(room);
 
-      console.log(`👤 ${username} joined room "${room}"`);
+        console.log(`👤 ${username} joined room "${room}"`);
 
-      // Ensure the room exists
-      await db.room.upsert({
-        where: { id: room },
-        update: {},
-        create: {
-          id: room,
-          time,
-          rounds
-         },
-      });
+        // Check if room exists, then create only if needed
+        const existingRoom = await db.room.findUnique({
+          where: { id: room },
+        });
 
-      // Add or update the user in DB
-      await db.user.upsert({
-        where: { id: socket.id },
-        update: {
-          username,
-          avatar: avatarUrl,
-          roomId: room,
-        },
-        create: {
-          id: socket.id,
-          username,
-          avatar: avatarUrl,
-          roomId: room,
-          host,
-        },
-      });
+        if (!existingRoom) {
+          try {
+            await db.room.create({
+              data: {
+                id: room,
+                time: time || 100,
+                rounds: rounds || 3,
+              },
+            });
+          } catch (createError) {
+            // If room was created by another concurrent request, ignore the error
+            if (createError.code !== "P2002") {
+              throw createError;
+            }
+            console.log(`Room "${room}" already exists (concurrent creation)`);
+          }
+        }
 
+        // Add or update the user in DB
+        await db.user.upsert({
+          where: { id: socket.id },
+          update: {
+            username,
+            avatar: avatarUrl,
+            roomId: room,
+          },
+          create: {
+            id: socket.id,
+            username,
+            avatar: avatarUrl,
+            roomId: room,
+            host: host || false,
+          },
+        });
 
-      // Notify room
-      io.to(room).emit("message", {
-        username: "Server",
-        message: `${username} joined the room.`,
-
-      });
-    } catch (error) {
-      console.error("❌ Error in joinRoom:", error);
+        // Notify room
+        io.to(room).emit("message", {
+          username: "Server",
+          message: `${username} joined the room.`,
+        });
+      } catch (error) {
+        console.error("❌ Error in joinRoom:", error);
+        socket.emit("error", { message: "Failed to join room" });
+      }
     }
-  });
+  );
 
   socket.on("chatMessage", (message) => {
     const user = users[socket.id];
@@ -87,12 +101,16 @@ io.on("connection", (socket) => {
         message: `${username} left the room.`,
       });
 
-
       console.log(`❌ ${username} disconnected from room "${room}"`);
       delete users[socket.id];
-      await db.user.delete({
-        where:{id:socket.id}
-      })
+
+      try {
+        await db.user.delete({
+          where: { id: socket.id },
+        });
+      } catch (deleteError) {
+        console.error(`❌ Failed to delete user ${socket.id}:`, deleteError);
+      }
 
       // Check if any users are left in the room
       const usersInRoom = Object.values(users).filter((u) => u.room === room);
